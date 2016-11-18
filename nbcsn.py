@@ -2,17 +2,18 @@ from resources.globals import *
 from resources.adobepass import ADOBE
 
 #Add-on specific Adobepass variables
-REQUESTOR_ID='nbcsports'
-PUBLIC_KEY = 'nTWqX10Zj8H0q34OHAmCvbRABjpBk06w'
-PRIVATE_KEY = 'Q0CAFe5TSCeEU86t'
+SERVICE_VARS = {'requestor_id':'nbcsports',
+                'public_key':'nTWqX10Zj8H0q34OHAmCvbRABjpBk06w',
+                'private_key':'Q0CAFe5TSCeEU86t'              
+               }
 
-def categories(): 
+def categories():     
     req = urllib2.Request('http://stream.nbcsports.com/data/mobile/apps/NBCSports/configuration-ios.json')  
     req.add_header("User-Agent", UA_PC)      
     response = urllib2.urlopen(req)   
     json_source = json.load(response)                       
     response.close()   
-    xbmc.log(str(json_source))
+    
     for item in json_source['brands'][0]['sub-nav']:
         display_name = item['display-name']
         url = item['feed-url']
@@ -35,8 +36,7 @@ def getAllSports():
         pass
 
 
-def scrapeVideos(url,scrape_type=None):
-    xbmc.log(url)
+def scrapeVideos(url,scrape_type=None):    
     req = urllib2.Request(url)
     req.add_header('Connection', 'keep-alive')
     req.add_header('Accept', '*/*')
@@ -95,11 +95,7 @@ def buildVideoLink(item):
         except:
             pass
         pass
-    
-    #Set quality level based on user settings    
-    #url = SET_STREAM_QUALITY(url)                    
-    
-    
+
     menu_name = item['title']
     name = menu_name                
     desc = item['info']     
@@ -110,18 +106,7 @@ def buildVideoLink(item):
     # Highlight active streams   
     start_time = item['start']
     pattern = "%Y%m%d-%H%M"
-    print "Start Time"
-    print start_time
-    #current_time =  datetime.utcnow().strftime(pattern) 
-    #my_time = int(time.mktime(time.strptime(current_time, pattern)))         
-    '''
-    try:
-        my_time = datetime.strptime(current_time,pattern)
-    except TypeError:
-        my_time = datetime.fromtimestamp(time.mktime(time.strptime(current_time, pattern)))
-    '''
-    #string (2008-12-07)
-    #20160304-1800
+
     aired = start_time[0:4]+'-'+start_time[4:6]+'-'+start_time[6:8]
     genre = item['sportName']
     
@@ -132,48 +117,12 @@ def buildVideoLink(item):
     except:        
         pass
     
-    
-    #event_start = int(time.mktime(time.strptime(start_time, pattern)))  
-    #event_start = datetime.strptime(start_time,pattern)
-    '''
-    try:
-        event_start = datetime.strptime(start_time,pattern)
-    except TypeError:
-        event_start = datetime.fromtimestamp(time.mktime(time.strptime(start_time, pattern)))
-    '''
-    #event_start = 0
-    '''
-    if length != 0:
-        event_end = int(event_start + length)
-    else:
-        #Default to 24 hours if length not provided        
-        event_end = int(event_start + 86400)
-    '''
-    #Allow access to stream 10 minutes early
-    #event_start = event_start - (10*60)
-
-    #Allow access to stream an hour after it's supposed to end
-    #event_end = event_end + (60*60)
-        
-    #print url
-    #print name + str(length) + " " + str(event_start) + " " + str(my_time) + " " + str(event_end) + " " + url + " FREE:" + str(free)
         
     info = {'plot':desc,'tvshowtitle':'NBCSN','title':name,'originaltitle':name,'duration':length,'aired':aired,'genre':genre}
     
     imgurl = "http://hdliveextra-pmd.edgesuite.net/HD/image_sports/mobile/"+item['image']+"_m50.jpg"    
     menu_name = filter(lambda x: x in string.printable, menu_name)
-    #and (mode != 1 or (my_time >= event_start and my_time <= event_end) or 'Watch Golf Channel LIVE' in name)
-    #if url != '' and (mode != 1 or (my_time >= event_start and my_time <= event_end) or 'Watch Golf Channel LIVE' in name):           
-    ''' 
-    try:
-        start_date = datetime.strptime(start_time, "%Y%m%d-%H%M")
-        #start_date = datetime.strftime(utc_to_local(start_date),xbmc.getRegion('dateshort')+' '+xbmc.getRegion('time').replace('%H%H','%H').replace(':%S',''))       
-        start_date = datetime.strftime(start_date,"%Y-%m-%d %h:%M")       
-        info['plot'] = 'Starting at: '+start_date+'\n\n'+info['plot']
-    except:
-        start_date = 'Unavailable'        
-        #start_date = datetime.fromtimestamp(time.mktime(time.strptime(start_time, "%Y%m%d-%H%M")))
-    '''
+   
     start_date = stringToDate(start_time, "%Y%m%d-%H%M")
     start_date = datetime.strftime(utc_to_local(start_date),xbmc.getRegion('dateshort')+' '+xbmc.getRegion('time').replace('%H%H','%H').replace(':%S',''))       
     info['plot'] = 'Starting at: '+start_date+'\n\n'+info['plot']
@@ -209,21 +158,17 @@ def buildVideoLink(item):
     
 
     
-def signStream(stream_url, stream_name, stream_icon):   
-    adobe = ADOBE(REQUESTOR_ID, PUBLIC_KEY, PRIVATE_KEY)       
+def signStream(stream_url, stream_name, stream_icon):       
+    adobe = ADOBE(SERVICE_VARS)
     #1. Authorize device
     #2. Get media token
     #3. Sign stream (TV sign)
-    
-    resource_id = GET_RESOURCE_ID()  
-    #media_token = adobe.POST_SHORT_AUTHORIZED(signed_requestor_id,authz)    
+    #--------------------------
+    #http://stream.nbcsports.com/data/mobile/Requestor_ID_Lookup_doc.csv    
+    #--------------------------
+    resource_id = GET_RESOURCE_ID()      
     adobe.authorizeDevice(resource_id)
-    media_token = adobe.mediaToken(resource_id)
-      
-    signed_requestor_id = GET_SIGNED_REQUESTOR_ID() 
-    #stream_url = adobe.TV_SIGN(media_token,resource_id, stream_url)
-
-    xbmc.log(str(media_token))
+    media_token = adobe.mediaToken(resource_id)          
     stream_url = adobe.tvSign(media_token, resource_id, stream_url)
 
     #Set quality level based on user settings    
@@ -239,27 +184,9 @@ def signStream(stream_url, stream_name, stream_icon):
     else:
         addLink(stream_name, stream_url, stream_name, stream_icon, FANART) 
 
-def logout():
-    adobe = ADOBE(REQUESTOR_ID, PUBLIC_KEY, PRIVATE_KEY)  
-    adobe.deauthorizeDevice()
-    '''
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/device.id')
-    except:
-        pass
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/provider.info')
-    except:
-        pass
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/cookies.lwp')
-    except:
-        pass
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/auth.token')
-    except:
-        pass
-    '''
+def logout():  
+    adobe = ADOBE(SERVICE_VARS)
+    adobe.deauthorizeDevice()    
     ADDON.setSetting(id='clear_data', value='false')  
 
 

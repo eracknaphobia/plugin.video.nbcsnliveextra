@@ -1,16 +1,44 @@
-from resources.globals import *
-
+import os, sys
+import uuid, hmac, hashlib, base64, time
+import xbmc, xbmcgui, xbmcaddon
+import cookielib, urllib, urllib2, json
+from urllib2 import URLError, HTTPError
 
 class ADOBE():    
-    requestor_id=''
+    api_url = 'http://api.auth.adobe.com'
+    base_url = 'http://sp.auth.adobe.com'
+    requestor_id = ''
     public_key = ''
-    private_key = ''
-    api_root_url = 'http://api.auth.adobe.com'
+    private_key = ''    
+    device_id = ''
+    user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.81 Safari/537.36'
 
-    def __init__(self, requestor_id, public_key, private_key):        
-        self.requestor_id = requestor_id
-        self.public_key = public_key
-        self.private_key = private_key
+
+    def __init__(self, service_vars):        
+        self.requestor_id = service_vars['requestor_id']
+        self.public_key = service_vars['public_key']
+        self.private_key = service_vars['private_key']
+        self.device_id = self.getDeviceID()        
+
+
+    def getDeviceID(self):
+        addon_profile_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+        fname = os.path.join(addon_profile_path, 'device.id')
+        #xbmc.log("FILE PATH == "+str(fname))
+        if not os.path.isfile(fname):
+            if not os.path.exists(addon_profile_path):
+                os.makedirs(addon_profile_path)         
+            new_device_id =str(uuid.uuid1())
+            device_file = open(fname,'w')   
+            device_file.write(new_device_id)
+            device_file.close()
+
+        fname = os.path.join(addon_profile_path, 'device.id')
+        device_file = open(fname,'r') 
+        device_id = device_file.readline()
+        device_file.close()
+        
+        return device_id
 
 
     def createAuthorization(self, request_method, request_uri):
@@ -27,18 +55,30 @@ class ADOBE():
     def registerDevice(self):         
         reggie_url = '/reggie/v1/'+self.requestor_id+'/regcode'
         authorization = self.createAuthorization('POST',reggie_url)       
-        url = self.api_root_url+reggie_url
+        url = self.api_url+reggie_url
         headers = [ ("Accept", "*/*"),
                     ("Content-type", "application/x-www-form-urlencoded"),
                     ("Authorization", authorization),
                     ("Accept-Language", "en-US"),
                     ("Accept-Encoding", "gzip, deflate"),
-                    ("User-Agent", UA_PC),
+                    ("User-Agent", self.user_agent),
                     ("Connection", "Keep-Alive"),                    
                     ("Pragma", "no-cache")
                     ]
         
-        body = "registrationURL=http://sp.auth.adobe.com/adobe-services&ttl=1800&deviceId="+DEVICE_ID+"&format=json"        
+        '''        
+        "deviceId": "MDFhZjVjNDA2MTUwOGIzNGEyNGIzN2Q3YzUyYmNkMjg4NjM0OTdkMDM1YzAyMzU1YTFkZTUzZTY4MGNkYTllZA==",
+        "deviceType": null",
+        "deviceUser": null,
+        "appId": null,
+        "appVersion": null,
+        "registrationURL": "http://sp.auth.adobe.com/adobe-services"
+        '''
+        #body = "registrationURL=http://sp.auth.adobe.com/adobe-services&ttl=1800&deviceId="+self.device_id+"&format=json"        
+        body = 'registrationURL='+self.base_url+'/adobe-services'
+        body += '&ttl=2700'
+        body += '&deviceId='+self.device_id
+        body += '&format=json'
         
         json_source = self.requestJSON(url, headers, body)
        
@@ -60,8 +100,8 @@ class ADOBE():
     def authorizeDevice(self, resource_id):
         auth_url = '/api/v1/authorize'
         authorization = self.createAuthorization('GET',auth_url)
-        url = self.api_root_url+auth_url
-        url += '?deviceId='+DEVICE_ID
+        url = self.api_url+auth_url
+        url += '?deviceId='+self.device_id
         url += '&requestor='+self.requestor_id
         url += '&resource='+urllib.quote(resource_id)
         url += '&format=json'
@@ -72,7 +112,7 @@ class ADOBE():
                     ("Authorization", authorization),
                     ("Accept-Language", "en-US"),
                     ("Accept-Encoding", "deflate"),
-                    ("User-Agent", UA_PC),
+                    ("User-Agent", self.user_agent),
                     ("Connection", "Keep-Alive"),                    
                     ("Pragma", "no-cache")
                     ]
@@ -83,8 +123,8 @@ class ADOBE():
     def deauthorizeDevice(self):        
         auth_url = '/api/v1/logout'
         authorization = self.createAuthorization('DELETE',auth_url)
-        url = self.api_root_url+auth_url
-        url += '?deviceId='+DEVICE_ID
+        url = self.api_url+auth_url
+        url += '?deviceId='+self.device_id
         url += '&requestor='+self.requestor_id
         url += '&format=json'
         #req = urllib2.Request(url)
@@ -94,7 +134,7 @@ class ADOBE():
                     ("Authorization", authorization),
                     ("Accept-Language", "en-US"),
                     ("Accept-Encoding", "deflate"),
-                    ("User-Agent", UA_PC),
+                    ("User-Agent", self.user_agent),
                     ("Connection", "Keep-Alive"),                    
                     ("Pragma", "no-cache")
                     ]
@@ -105,7 +145,7 @@ class ADOBE():
 
     def mediaToken(self, resource_id):
         url = 'http://api.auth.adobe.com/api/v1/tokens/media'
-        url += '?deviceId='+DEVICE_ID
+        url += '?deviceId='+self.device_id
         url += '&requestor='+self.requestor_id        
         url += '&resource='+urllib.quote(resource_id)
         url += '&format=json'
@@ -115,7 +155,7 @@ class ADOBE():
                     ("Authorization", authorization),
                     ("Accept-Language", "en-US"),
                     ("Accept-Encoding", "deflate"),
-                    ("User-Agent", UA_PC),
+                    ("User-Agent", self.user_agent),
                     ("Connection", "Keep-Alive"),                    
                     ("Pragma", "no-cache")
                     ]
@@ -126,36 +166,37 @@ class ADOBE():
 
 
     def tvSign(self, media_token, resource_id, stream_url):
-        url = 'http://sp.auth.adobe.com//tvs/v1/sign'        
+        url = self.base_url+'//tvs/v1/sign'        
         headers = [ ("Accept", "*/*"),
                     ("Accept-Encoding", "deflate"),
                     ("Accept-Language", "en;q=1"),
                     ("Content-Type", "application/x-www-form-urlencoded"),  
-                    ("User-Agent", UA_PC)
+                    ("User-Agent", self.user_agent)
                     ]        
 
         body = urllib.urlencode({'cdn' : 'akamai',
-                                 #'mediaToken' : base64.b64encode(media_token),
                                  'mediaToken' : media_token,
                                  'resource' : base64.b64encode(resource_id),
                                  'url' : stream_url
                                 })
 
-        cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))        
-        cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
+        addon_profile_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+        cj = cookielib.LWPCookieJar(os.path.join(addon_profile_path, 'cookies.lwp'))        
+        cj.load(os.path.join(addon_profile_path, 'cookies.lwp'),ignore_discard=True)
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))    
         opener.addheaders = headers 
         response = opener.open(url, body)
         stream_url = response.read()
         response.close()
-        SAVE_COOKIE(cj)
+        self.saveCookie(cj)
                 
         return stream_url
 
 
-    def requestJSON(self, url, headers, body=None, method=None):        
-        cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))
-        try: cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
+    def requestJSON(self, url, headers, body=None, method=None):      
+        addon_profile_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))  
+        cj = cookielib.LWPCookieJar(os.path.join(addon_profile_path, 'cookies.lwp'))
+        try: cj.load(os.path.join(addon_profile_path, 'cookies.lwp'),ignore_discard=True)
         except: pass
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))    
         opener.addheaders = headers     
@@ -166,7 +207,7 @@ class ADOBE():
             response = opener.open(request)
             json_source = json.load(response) 
             response.close()
-            SAVE_COOKIE(cj)
+            self.saveCookie(cj)
         except HTTPError as e:            
             if e.code == 403:
                 msg = 'Your device is not authorized to view the selected stream.\n Would you like to authorize this device now?'
@@ -176,3 +217,15 @@ class ADOBE():
             sys.exit(0)
 
         return json_source
+
+
+    def saveCookie(self, cj):
+        # Cookielib patch for Year 2038 problem
+        # Possibly wrap this in if to check if device is using a 32bit OS
+        for cookie in cj:
+            # Jan, 1 2038
+            if cookie.expires >= 2145916800:
+                #Jan, 1 2037
+                cookie.expires =  2114380800
+        
+        cj.save(ignore_discard=True)  

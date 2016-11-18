@@ -93,34 +93,7 @@ def GET_SIGNED_REQUESTOR_ID():
     
     return signed_requestor_id
 
-def SET_STREAM_QUALITY(url):
-    xbmc.log(url)
-    '''
-    if QUALITY == 0:
-        q_lvl = "200000"
-        q_lvl_golf = "296k"
-    elif QUALITY == 1:
-        q_lvl = "400000"
-        q_lvl_golf = "496k"
-    elif QUALITY == 2:
-        q_lvl = "600000"
-        q_lvl_golf = "796k"
-    elif QUALITY == 3:
-        q_lvl = "900000"
-        q_lvl_golf = "1296k"
-    elif QUALITY == 4:
-        q_lvl = "1400000"
-        q_lvl_golf = "1896k"
-    elif QUALITY == 5:
-        q_lvl = "2200000"
-        q_lvl_golf = "2596k"
-    else:
-        q_lvl = "3450000"
-        #q_lvl = "4296000"
-        q_lvl_golf = "4296k"
-    '''
-
-
+def SET_STREAM_QUALITY(url): 
     stream_url = {}
     stream_title = []
 
@@ -142,8 +115,7 @@ def SET_STREAM_QUALITY(url):
             cookies = cookies + "; "
         cookies = cookies + cookie.name + "=" + cookie.value
     
-    xbmc.log(master)
-    xbmc.log(cookies)
+    
     line = re.compile("(.+?)\n").findall(master)  
     
     xplayback = ''.join([random.choice('0123456789ABCDEF') for x in range(32)])
@@ -207,15 +179,6 @@ def SET_STREAM_QUALITY(url):
         dialog = xbmcgui.Dialog() 
         ok = dialog.ok('Streams Not Found', msg)
 
-    '''
-    url = url.replace('master.m3u8',q_lvl_golf+'/proge.m3u8')       
-    url = url.replace('manifest(format=m3u8-aapl-v3)','QualityLevels('+q_lvl+')/Manifest(video,format=m3u8-aapl-v3,audiotrack=audio_en_0)')       
-    url = url.replace('manifest(format=m3u8-aapl,filtername=vodcut)','QualityLevels('+q_lvl+')/Manifest(video,format=m3u8-aapl,filtername=vodcut)')
-    url = url.replace('manifest(format=m3u8-aapl-v3,filtername=vodcut)','QualityLevels('+q_lvl+')/Manifest(video,format=m3u8-aapl-v3,audiotrack=audio_en_0,filtername=vodcut)')
-    '''
-    
-    print "STREAM URL === " + url 
-
     return url
 
 
@@ -223,18 +186,6 @@ def natural_sort_key(s):
     _nsre = re.compile('([0-9]+)')
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(_nsre, s)] 
-
-
-def SAVE_COOKIE(cj):
-    # Cookielib patch for Year 2038 problem
-    # Possibly wrap this in if to check if device is using a 32bit OS
-    for cookie in cj:
-        # Jan, 1 2038
-        if cookie.expires >= 2145916800:
-            #Jan, 1 2037
-            cookie.expires =  2114380800
-    
-    cj.save(ignore_discard=True)  
 
 
 def utc_to_local(utc_dt):
