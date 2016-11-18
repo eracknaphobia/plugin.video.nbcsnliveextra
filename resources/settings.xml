@@ -10,7 +10,7 @@
   <!-- General -->
   <category label="200">
     <setting id="clear_data" type="bool" label="210" default="false"/>
-    <setting id="free_only" type="bool" label="220" default="false" />  
+    <setting id="free_only" type="bool" label="220" default="false" />      
     
   </category>
   <!-- Visual -->

@@ -35,6 +35,7 @@ def FIND(source,start_str,end_str):
     else:
         return ''
 
+
 def GET_RESOURCE_ID():
     #########################
     # Get resource_id
@@ -60,6 +61,7 @@ def GET_RESOURCE_ID():
 
 
     return resource_id
+
 
 def GET_SIGNED_REQUESTOR_ID():
 
@@ -189,11 +191,9 @@ def SET_STREAM_QUALITY(url):
     
     if len(stream_title) > 0:
         ret =-1      
-        stream_title.sort(key=natural_sort_key, reverse=True)  
-        print "PLAY BEST SETTING"
-        print PLAY_BEST
-        if str(PLAY_BEST) == 'true':
-            ret = len(stream_title)-1            
+        stream_title.sort(key=natural_sort_key, reverse=True)          
+        if str(PLAY_BEST) == 'true':            
+            ret = 0
         else:
             dialog = xbmcgui.Dialog() 
             ret = dialog.select('Choose Stream Quality', stream_title)
@@ -235,27 +235,6 @@ def SAVE_COOKIE(cj):
             cookie.expires =  2114380800
     
     cj.save(ignore_discard=True)  
-
-
-def CLEAR_SAVED_DATA():
-    print "IN CLEAR"
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/device.id')
-    except:
-        pass
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/provider.info')
-    except:
-        pass
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/cookies.lwp')
-    except:
-        pass
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/auth.token')
-    except:
-        pass
-    ADDON.setSetting(id='clear_data', value='false')   
 
 
 def utc_to_local(utc_dt):
@@ -371,9 +350,6 @@ CLEAR = str(settings.getSetting(id="clear_data"))
 FREE_ONLY = str(settings.getSetting(id="free_only"))
 PLAY_MAIN = str(settings.getSetting(id="play_main"))
 PLAY_BEST = str(settings.getSetting(id="play_best"))
-
-if CLEAR == 'true':
-   CLEAR_SAVED_DATA()
 
 
 #User Agents

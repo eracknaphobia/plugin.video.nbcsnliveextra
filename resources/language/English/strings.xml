@@ -7,7 +7,7 @@
 	<string id="150">Password</string>
 	<!-- General Settings -->
 	<string id="200">General</string>
-	<string id="210">Clear Saved Data</string>
+	<string id="210">Deauthorize Device</string>
 	<string id="220">Only Display FREE Content</string>	
 	<string id="230">Play Stream From Main Window</string>	
 	<string id="240">Automatically Play Best Stream Available</string>	

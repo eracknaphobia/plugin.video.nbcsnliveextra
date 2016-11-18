@@ -78,7 +78,29 @@ class ADOBE():
                     ]
 
         json_source = self.requestJSON(url, headers)
-        
+       
+
+    def deauthorizeDevice(self):        
+        auth_url = '/api/v1/logout'
+        authorization = self.createAuthorization('DELETE',auth_url)
+        url = self.api_root_url+auth_url
+        url += '?deviceId='+DEVICE_ID
+        url += '&requestor='+self.requestor_id
+        url += '&format=json'
+        #req = urllib2.Request(url)
+
+        headers = [ ("Accept", "*/*"),
+                    ("Content-type", "application/x-www-form-urlencoded"),
+                    ("Authorization", authorization),
+                    ("Accept-Language", "en-US"),
+                    ("Accept-Encoding", "deflate"),
+                    ("User-Agent", UA_PC),
+                    ("Connection", "Keep-Alive"),                    
+                    ("Pragma", "no-cache")
+                    ]
+
+        try: json_source = self.requestJSON(url, headers, None, 'DELETE')
+        except: pass
      
 
     def mediaToken(self, resource_id):
@@ -131,15 +153,17 @@ class ADOBE():
         return stream_url
 
 
-    def requestJSON(self, url, headers, body=''):        
-        cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))        
-        cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
+    def requestJSON(self, url, headers, body=None, method=None):        
+        cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))
+        try: cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
+        except: pass
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))    
-        opener.addheaders = headers        
-        
-        try:
-            if body != '': response = opener.open(url, body)
-            else: response = opener.open(url)
+        opener.addheaders = headers     
+          
+        try:           
+            request = urllib2.Request(url, body)
+            if method == 'DELETE': request.get_method = lambda: method            
+            response = opener.open(request)
             json_source = json.load(response) 
             response.close()
             SAVE_COOKIE(cj)

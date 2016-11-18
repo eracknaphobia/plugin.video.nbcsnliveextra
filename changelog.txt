@@ -1,2 +1,6 @@
+2016.11.18
+- Fixed Play best option
+- Added a deauthorize device option in settings
+
 2016.11.17
 - Initial Release

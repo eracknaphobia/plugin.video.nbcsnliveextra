@@ -1,8 +1,12 @@
 from resources.globals import *
 from resources.adobepass import ADOBE
 
-def categories(): 
+#Add-on specific Adobepass variables
+REQUESTOR_ID='nbcsports'
+PUBLIC_KEY = 'nTWqX10Zj8H0q34OHAmCvbRABjpBk06w'
+PRIVATE_KEY = 'Q0CAFe5TSCeEU86t'
 
+def categories(): 
     req = urllib2.Request('http://stream.nbcsports.com/data/mobile/apps/NBCSports/configuration-ios.json')  
     req.add_header("User-Agent", UA_PC)      
     response = urllib2.urlopen(req)   
@@ -31,7 +35,7 @@ def getAllSports():
         pass
 
 
-def SCRAPE_VIDEOS(url,scrape_type=None):
+def scrapeVideos(url,scrape_type=None):
     xbmc.log(url)
     req = urllib2.Request(url)
     req.add_header('Connection', 'keep-alive')
@@ -54,11 +58,11 @@ def SCRAPE_VIDEOS(url,scrape_type=None):
         json_source = sorted(json_source, key=lambda k: k['start'], reverse = False)
 
     for item in json_source:        
-      BUILD_VIDEO_LINK(item)
+      buildVideoLink(item)
     
 
 
-def BUILD_VIDEO_LINK(item):
+def buildVideoLink(item):
     url = ''    
     #Use the ottStreamUrl (v3) until sound is fixed for newer (v4) streams in kodi
     try:      
@@ -205,12 +209,8 @@ def BUILD_VIDEO_LINK(item):
     
 
     
-def SIGN_STREAM(stream_url, stream_name, stream_icon):   
-    requestor_id='nbcsports'
-    public_key = 'nTWqX10Zj8H0q34OHAmCvbRABjpBk06w'
-    private_key = 'Q0CAFe5TSCeEU86t'
-
-    adobe = ADOBE(requestor_id, public_key, private_key)       
+def signStream(stream_url, stream_name, stream_icon):   
+    adobe = ADOBE(REQUESTOR_ID, PUBLIC_KEY, PRIVATE_KEY)       
     #1. Authorize device
     #2. Get media token
     #3. Sign stream (TV sign)
@@ -239,7 +239,33 @@ def SIGN_STREAM(stream_url, stream_name, stream_icon):
     else:
         addLink(stream_name, stream_url, stream_name, stream_icon, FANART) 
 
+def logout():
+    adobe = ADOBE(REQUESTOR_ID, PUBLIC_KEY, PRIVATE_KEY)  
+    adobe.deauthorizeDevice()
+    '''
+    try:
+        os.remove(ADDON_PATH_PROFILE+'/device.id')
+    except:
+        pass
+    try:
+        os.remove(ADDON_PATH_PROFILE+'/provider.info')
+    except:
+        pass
+    try:
+        os.remove(ADDON_PATH_PROFILE+'/cookies.lwp')
+    except:
+        pass
+    try:
+        os.remove(ADDON_PATH_PROFILE+'/auth.token')
+    except:
+        pass
+    '''
+    ADDON.setSetting(id='clear_data', value='false')  
 
+
+
+if CLEAR == 'true':
+   logout()
 
 params=get_params()
 url=None
@@ -279,16 +305,10 @@ print "icon image:"+str(icon_image)
 
 if mode==None or url==None or len(url)<1:        
         categories()        
-elif mode==1:        
-        LIVE_AND_UPCOMING()                     
-elif mode==2:        
-        FEATURED(url)
-elif mode==3:        
-        getAllSports()
 elif mode==4:
-        SCRAPE_VIDEOS(url,scrape_type)
+        scrapeVideos(url,scrape_type)
 elif mode==5:        
-        SIGN_STREAM(url, name, icon_image)
+        signStream(url, name, icon_image)
         
 elif mode==6:
     #Set quality level based on user settings    
