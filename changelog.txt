@@ -1,3 +1,6 @@
+2016.11.18.2
+- Fixed path variables
+
 2016.11.18
 - Fixed Play best option
 - Added a deauthorize device option in settings

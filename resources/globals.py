@@ -324,7 +324,6 @@ def get_params():
 
 # KODI ADDON GLOBALS
 ADDON_HANDLE = int(sys.argv[1])
-ROOTDIR = xbmcaddon.Addon(id='plugin.video.nbcsnliveextra').getAddonInfo('path')
 ADDON = xbmcaddon.Addon()
 ADDON_ID = ADDON.getAddonInfo('id')
 ADDON_VERSION = ADDON.getAddonInfo('version')
@@ -332,12 +331,14 @@ ADDON_PATH = xbmc.translatePath(ADDON.getAddonInfo('path'))
 ADDON_PATH_PROFILE = xbmc.translatePath(ADDON.getAddonInfo('profile'))
 KODI_VERSION = float(re.findall(r'\d{2}\.\d{1}', xbmc.getInfoLabel("System.BuildVersion"))[0])
 LOCAL_STRING = ADDON.getLocalizedString
+ROOTDIR = xbmcaddon.Addon(id=ADDON_ID).getAddonInfo('path')
 FANART = ROOTDIR+"/fanart.jpg"
 ICON = ROOTDIR+"/icon.png"
 ROOT_URL = 'http://stream.nbcsports.com/data/mobile/'
 
+
 #Settings file location
-settings = xbmcaddon.Addon(id='plugin.video.nbcsnliveextra')
+settings = xbmcaddon.Addon(id=ADDON_ID)
 
 #Main settings
 #QUALITY = int(settings.getSetting(id="quality"))
