@@ -7,6 +7,7 @@ from urllib2 import URLError, HTTPError
 class ADOBE():    
     api_url = 'http://api.auth.adobe.com'
     base_url = 'http://sp.auth.adobe.com'
+    activate_url = ''
     requestor_id = ''
     public_key = ''
     private_key = ''    
@@ -18,6 +19,7 @@ class ADOBE():
         self.requestor_id = service_vars['requestor_id']
         self.public_key = service_vars['public_key']
         self.private_key = service_vars['private_key']
+        self.activate_url = service_vars['activate_url']
         self.device_id = self.getDeviceID()        
 
 
@@ -83,7 +85,7 @@ class ADOBE():
         json_source = self.requestJSON(url, headers, body)
        
         #prompt user to got to http://activate.nbcsports.com/?device=Win10 and activate the code in the messagebox
-        msg = '1. Go to [B][COLOR yellow]activate.nbcsports.com[/COLOR][/B][CR]'
+        msg = '1. Go to [B][COLOR yellow]'+self.activate_url+'[/COLOR][/B][CR]'
         #msg += '2. Select [B][COLOR yellow]Windows 10[/COLOR][/B] as your device[CR]'
         msg += '2. Enter [B][COLOR yellow]'+json_source['code']+'[/COLOR][/B] as your activation code'
         #msg += "\n" + json_source['code']

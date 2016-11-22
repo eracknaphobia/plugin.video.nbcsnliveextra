@@ -4,7 +4,8 @@ from resources.adobepass import ADOBE
 #Add-on specific Adobepass variables
 SERVICE_VARS = {'requestor_id':'nbcsports',
                 'public_key':'nTWqX10Zj8H0q34OHAmCvbRABjpBk06w',
-                'private_key':'Q0CAFe5TSCeEU86t'              
+                'private_key':'Q0CAFe5TSCeEU86t',
+                'activate_url':'activate.nbcsports.com'
                }
 
 def categories():     

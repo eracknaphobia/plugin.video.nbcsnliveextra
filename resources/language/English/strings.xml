@@ -13,7 +13,7 @@
 	<string id="240">Automatically Play Best Stream Available</string>	
     <!-- Stream settings -->
     <string id="300">Stream</string>   
-    <string id="310">Stream Quality</string>		
+    <string id="310">Stream Quality Preference</string>		
 	<string id="320">CDN Server Location</string>	
 
 </strings>

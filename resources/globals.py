@@ -85,11 +85,10 @@ def GET_SIGNED_REQUESTOR_ID():
 
     json_source = json.load(response)                       
     response.close() 
-
-    print "ADOBE PASS"
+    
     signed_requestor_id = json_source['adobePassSignedRequestorId']
     signed_requestor_id = signed_requestor_id.replace('\n',"")
-    print signed_requestor_id
+    
     
     return signed_requestor_id
 
@@ -109,18 +108,15 @@ def SET_STREAM_QUALITY(url):
     master = resp.read()
     resp.close()  
 
+    xbmc.log(str(master))
+
     cookies = '' 
     for cookie in cj:                    
         if cookies != '':
             cookies = cookies + "; "
         cookies = cookies + cookie.name + "=" + cookie.value
-    
-    
+        
     line = re.compile("(.+?)\n").findall(master)  
-    
-    xplayback = ''.join([random.choice('0123456789ABCDEF') for x in range(32)])
-    xplayback = xplayback[0:7]+'-'+xplayback[8:12]+'-'+xplayback[13:17]+'-'+xplayback[18:22]+'-'+xplayback[23:]
-
     for temp_url in line:
         if '#EXT' not in temp_url:
             temp_url = temp_url.rstrip()
@@ -153,23 +149,37 @@ def SET_STREAM_QUALITY(url):
             if start > 0:
                 start = start + len('BANDWIDTH=')
                 end = temp_url.find(',',start)
-                desc = temp_url[start:end]
+                if end != -1: desc = temp_url[start:end]
+                else: desc = temp_url[start:]
                 try:
                     int(desc)
                     desc = str(int(desc)/1000) + ' kbps'
                 except:
                     pass            
     
-    
+    pref_quality = None    
+    if 'kbit/s' in QUALITY: pref_quality = int(filter(str.isdigit, QUALITY))
+        
     if len(stream_title) > 0:
         ret =-1      
         stream_title.sort(key=natural_sort_key, reverse=True)          
         if str(PLAY_BEST) == 'true':            
             ret = 0
+        elif pref_quality != None:            
+            index = 0
+            dif = 99999999
+            for value in stream_title:                
+                temp_quality = int(filter(str.isdigit, stream_title[index]))    
+                if abs(temp_quality - pref_quality) < dif:
+                    dif = abs(temp_quality - pref_quality)
+                    ret = index
+
+                index = index + 1
         else:
             dialog = xbmcgui.Dialog() 
             ret = dialog.select('Choose Stream Quality', stream_title)
             print ret
+
         if ret >=0:
             url = stream_url.get(stream_title[ret])           
         else:
@@ -292,7 +302,7 @@ ROOT_URL = 'http://stream.nbcsports.com/data/mobile/'
 settings = xbmcaddon.Addon(id=ADDON_ID)
 
 #Main settings
-#QUALITY = int(settings.getSetting(id="quality"))
+QUALITY = str(settings.getSetting(id="quality"))
 #USER_AGENT = str(settings.getSetting(id="user-agent"))
 CDN = int(settings.getSetting(id="cdn"))
 USERNAME = str(settings.getSetting(id="username"))
