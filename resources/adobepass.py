@@ -68,15 +68,7 @@ class ADOBE():
                     ("Pragma", "no-cache")
                     ]
         
-        '''        
-        "deviceId": "MDFhZjVjNDA2MTUwOGIzNGEyNGIzN2Q3YzUyYmNkMjg4NjM0OTdkMDM1YzAyMzU1YTFkZTUzZTY4MGNkYTllZA==",
-        "deviceType": null",
-        "deviceUser": null,
-        "appId": null,
-        "appVersion": null,
-        "registrationURL": "http://sp.auth.adobe.com/adobe-services"
-        '''
-        #body = "registrationURL=http://sp.auth.adobe.com/adobe-services&ttl=1800&deviceId="+self.device_id+"&format=json"        
+       
         body = 'registrationURL='+self.base_url+'/adobe-services'
         body += '&ttl=2700'
         body += '&deviceId='+self.device_id
