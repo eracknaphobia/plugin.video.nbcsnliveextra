@@ -9,8 +9,8 @@ SERVICE_VARS = {'requestor_id':'nbcsports',
                }
 
 def categories():     
-    req = urllib2.Request('http://stream.nbcsports.com/data/mobile/apps/NBCSports/configuration-ios.json')  
-    req.add_header("User-Agent", UA_PC)      
+    req = urllib2.Request(ROOT_URL+'apps/NBCSports/configuration-ios.json')  
+    req.add_header("User-Agent", UA_NBCSN)      
     response = urllib2.urlopen(req)   
     json_source = json.load(response)                       
     response.close()   
@@ -19,22 +19,6 @@ def categories():
         display_name = item['display-name']
         url = item['feed-url']
         addDir(display_name,url,4,ICON,FANART)
-    
-
-def getAllSports():    
-    req = urllib2.Request(ROOT_URL+'apps/NBCSports/configuration-ios.json')    
-    #http://stream.nbcsports.com/data/mobile/apps/NBCSports/configuration-ios.json
-    response = urllib2.urlopen(req)   
-    json_source = json.load(response)                       
-    response.close()    
-
-    try:
-        for item in json_source['sports']:        
-            code = item['code']
-            name = item['name']                  
-            addDir(name,ROOT_URL+'mcms/prod/'+code+'.json',4,ICON,FANART,'ALL')
-    except:
-        pass
 
 
 def scrapeVideos(url,scrape_type=None):    
@@ -58,8 +42,10 @@ def scrapeVideos(url,scrape_type=None):
     else:
         json_source = sorted(json_source, key=lambda k: k['start'], reverse = False)
 
-    for item in json_source:        
-      buildVideoLink(item)
+
+    for item in json_source:            
+      if 'show-all' in filter_list or item['sport'] in filter_list:
+        buildVideoLink(item)
     
 
 
@@ -101,8 +87,7 @@ def buildVideoLink(item):
     name = menu_name                
     desc = item['info']     
     free = int(item['free'])
-    if 'Watch Golf Channel LIVE' in name:
-        free = 1
+    if 'Watch Golf Channel LIVE' in name: free = 1
 
     # Highlight active streams   
     start_time = item['start']
@@ -176,9 +161,7 @@ def signStream(stream_url, stream_name, stream_icon):
     stream_url = SET_STREAM_QUALITY(stream_url)   
     
     listitem = xbmcgui.ListItem(path=stream_url)
-    
-    print "PLAY FROM MAIN!!!!"
-    print str(PLAY_MAIN)
+       
 
     if str(PLAY_MAIN) == 'true':
         xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, listitem)
@@ -223,12 +206,6 @@ try:
 except:
     pass
 
-
-print "Mode: "+str(mode)
-print "URL: "+str(url)
-print "Name: "+str(name)
-print "scrape_type:"+str(scrape_type)
-print "icon image:"+str(icon_image)
 
 
 if mode==None or url==None or len(url)<1:        

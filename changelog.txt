@@ -1,3 +1,8 @@
+2016.12.29
+- Add a filter setting to allow users to customize the results shown in each section
+- Removed No longer used httplib2 requirement
+- Cleaned up some code
+
 2016.11.22
 - Added Preferred Stream Quality Setting
 

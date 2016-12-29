@@ -7,7 +7,7 @@ import uuid
 import hmac
 import hashlib
 import string, random
-import urllib, urllib2, httplib2
+import urllib, urllib2
 import HTMLParser
 import time
 import cookielib
@@ -91,6 +91,7 @@ def GET_SIGNED_REQUESTOR_ID():
     
     
     return signed_requestor_id
+
 
 def SET_STREAM_QUALITY(url): 
     stream_url = {}
@@ -177,8 +178,7 @@ def SET_STREAM_QUALITY(url):
                 index = index + 1
         else:
             dialog = xbmcgui.Dialog() 
-            ret = dialog.select('Choose Stream Quality', stream_title)
-            print ret
+            ret = dialog.select('Choose Stream Quality', stream_title)            
 
         if ret >=0:
             url = stream_url.get(stream_title[ret])           
@@ -303,7 +303,6 @@ settings = xbmcaddon.Addon(id=ADDON_ID)
 
 #Main settings
 QUALITY = str(settings.getSetting(id="quality"))
-#USER_AGENT = str(settings.getSetting(id="user-agent"))
 CDN = int(settings.getSetting(id="cdn"))
 USERNAME = str(settings.getSetting(id="username"))
 PASSWORD = str(settings.getSetting(id="password"))
@@ -313,12 +312,41 @@ FREE_ONLY = str(settings.getSetting(id="free_only"))
 PLAY_MAIN = str(settings.getSetting(id="play_main"))
 PLAY_BEST = str(settings.getSetting(id="play_best"))
 
+filter_ids = [ 
+            "show-all",     
+            "nbc-nfl",
+            "nbc-premier-league",
+            "nbc-nascar",
+            "nbc-nhl",
+            "nbc-golf",
+            "nbc-pga",
+            "nbc-nd",
+            "nbc-college-football",
+            "nbc-f1",
+            "nbc-nba",
+            "nbc-mlb",
+            "nbc-rugby",
+            "nbc-horses",
+            "nbc-tennis",
+            "nbc-indy",
+            "nbc-moto",
+            "nbc-olympic-sports",
+            "nbc-csn-bay-area",
+            "nbc-csn-california",
+            "nbc-csn-chicago",
+            "nbc-csn-mid-atlantic",
+            "nbc-csn-new-england",
+            "nbc-csn-philadelphia"
+            ]
+
+#Create a filter list
+filter_list = []
+for fid in filter_ids:
+    if str(settings.getSetting(id=fid)) == "true":
+        filter_list.append(fid)
 
 #User Agents
-UA_IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_0_2 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) Mobile/14A456'
-UA_PC = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.81 Safari/537.36'        
-UA_ADOBE_PASS = 'AdobePassNativeClient/1.10.1 (iPhone; U; CPU iPhone OS 10.0.2 like Mac OS X; en-us)'
-UA_NBCSN = 'AppleCoreMedia/1.0.0.14A456 (iPhone; U; CPU OS 10_0_2 like Mac OS X; en_us)'
+UA_NBCSN = 'NBCSports_Prod/8616 CFNetwork/808.2.16 Darwin/16.3.0'
 
 
 #Create Random Device ID and save it to a file
