@@ -43,7 +43,7 @@ def scrapeVideos(url,scrape_type=None):
         json_source = sorted(json_source, key=lambda k: k['start'], reverse = False)
 
 
-    for item in json_source:            
+    for item in json_source:
       if 'show-all' in filter_list or item['sport'] in filter_list:
         buildVideoLink(item)
     
@@ -87,7 +87,6 @@ def buildVideoLink(item):
     name = menu_name                
     desc = item['info']     
     free = int(item['free'])
-    if 'Watch Golf Channel LIVE' in name: free = 1
 
     # Highlight active streams   
     start_time = item['start']

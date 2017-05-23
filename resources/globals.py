@@ -336,17 +336,21 @@ filter_ids = [
             "nbc-csn-chicago",
             "nbc-csn-mid-atlantic",
             "nbc-csn-new-england",
-            "nbc-csn-philadelphia"
+            "nbc-csn-philadelphia",
+            "nbc-sny"
             ]
 
 #Create a filter list
+xbmc.log('Filter List ---------------------------------------------------')
 filter_list = []
 for fid in filter_ids:
+    xbmc.log(fid + ' ' + str(settings.getSetting(id=fid)))
     if str(settings.getSetting(id=fid)) == "true":
+        xbmc.log(fid)
         filter_list.append(fid)
 
 #User Agents
-UA_NBCSN = 'NBCSports_Prod/8616 CFNetwork/808.2.16 Darwin/16.3.0'
+UA_NBCSN = 'NBCSports-iOS/9971 CFNetwork/811.5.4 Darwin/16.6.0'
 
 
 #Create Random Device ID and save it to a file

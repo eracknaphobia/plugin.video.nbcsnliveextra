@@ -21,7 +21,6 @@
   </category>
   <category label="400">
     <setting type="lsep" label="Filter by Sport and Category"/>
-    <!--<setting id="filter" type="select" label="410" default="Show All" values="Show All|NFL|Premier League|NASCAR|NHL|Golf|PGA|Notre Dame|College Football|F1|NBA|MLB|Rugby|Horse racing|Tennis|IndyCar|Pro Motocross|Olympic Sports|CSN Bay Area|CSN California|CSN Chicago|CSN Mid-Atlantic|CSN New England|CSN Philadelphia"  /> -->
     <setting id="show-all" type="bool" label="410" default="true" />
     <setting id="nbc-nfl" type="bool" label="411" default="false" />
     <setting id="nbc-premier-league" type="bool" label="412" default="false" />
@@ -46,7 +45,7 @@
     <setting id="nbc-csn-mid-atlantic" type="bool" label="431" default="false" />
     <setting id="nbc-csn-new-england" type="bool" label="432" default="false" />
     <setting id="nbc-csn-philadelphia" type="bool" label="433" default="false" />
-    
+    <setting id="nbc-sny" type="bool" label="434" default="false" />   
 
  </category>
 </settings>
