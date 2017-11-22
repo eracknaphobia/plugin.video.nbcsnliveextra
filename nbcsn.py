@@ -15,9 +15,13 @@ def categories():
     json_source = json.load(response)
     response.close()
 
+
+
     for item in json_source['brands'][0]['sub-nav']:
         display_name = item['display-name']
         url = item['feed-url']
+        url = url.replace('/ios','/firetv')
+
         addDir(display_name,url,4,ICON,FANART)
 
 
@@ -157,7 +161,7 @@ def signStream(stream_url, stream_name, stream_icon):
     stream_url = adobe.tvSign(media_token, resource_id, stream_url)
 
     #Set quality level based on user settings
-    stream_url = SET_STREAM_QUALITY(stream_url)
+    #stream_url = SET_STREAM_QUALITY(stream_url)
 
     listitem = xbmcgui.ListItem(path=stream_url)
 
