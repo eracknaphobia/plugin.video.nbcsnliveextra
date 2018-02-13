@@ -1,3 +1,7 @@
+2018.2.13
+- Cleaned up a bunch of code
+- Fixed bug that didn't launch stream after login
+
 2017.5.24
 - Golf Channel requires subscription
 - Added Sportsnet New York to filter list
