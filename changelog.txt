@@ -1,6 +1,8 @@
 2018.2.13
 - Cleaned up a bunch of code
 - Fixed bug that didn't launch stream after login
+- Added 2018 Olympics Icon
+- Revived ability to select stream quality (just turn off Automatically Play Best Stream)
 
 2017.5.24
 - Golf Channel requires subscription
