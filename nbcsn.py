@@ -1,5 +1,4 @@
 from resources.globals import *
-#from resources.adobepass import ADOBE
 from adobepass.adobe import ADOBE
 
 
@@ -8,38 +7,31 @@ def categories():
         'User-Agent': UA_NBCSN
     }
 
-    r = requests.get(ROOT_URL+'apps/NBCSports/configuration-ios.json', headers=headers, verify=VERIFY)
+    r = requests.get(ROOT_URL+'apps/NBCSports/configuration-firetv.json', headers=headers, verify=VERIFY)
     json_source = r.json()
 
-    olympic_icon = os.path.join(ROOTDIR, "olympics_icon.png")
-    olympic_fanart = 'http://www.nbcolympics.com/sites/default/files/field_no_results_image/06April2016/bg-img-pye-951x536.jpg'
-    add_dir('Olympics', ROOT_URL+'apps/NBCSports/configuration-ios.json', 3, olympic_icon, olympic_fanart)
-
-    for item in json_source['brands'][0]['sub-nav']:
+    for item in json_source['brands']:
         display_name = item['display-name']
-        url = item['feed-url']
-        url = url.replace('/ios','/firetv')
+        url = item['id']
+        icon = item['channelChangerLogo']
+        add_dir(display_name, url, 2, icon, FANART)
 
-        add_dir(display_name,url,4,ICON,FANART)
 
-
-def olympics(url):
+def get_sub_nav(id, icon):
     headers = {
         'User-Agent': UA_NBCSN
     }
 
-    r = requests.get(ROOT_URL+'apps/NBCSports/configuration-ios.json', headers=headers, verify=VERIFY)
+    r = requests.get(ROOT_URL+'apps/NBCSports/configuration-firetv.json', headers=headers, verify=VERIFY)
     json_source = r.json()
 
-    olympic_icon = os.path.join(ROOTDIR,"olympics_icon.png")
-    olympic_fanart = 'http://www.nbcolympics.com/sites/default/files/field_no_results_image/06April2016/bg-img-pye-951x536.jpg'
-
-    for item in json_source['sections'][0]['sub-nav']:
-        display_name = item['display-name']
-        url = item['feed-url']
-        url = url.replace('/ios','/firetv')
-
-        add_dir(display_name, url, 4, olympic_icon, olympic_fanart)
+    for brand in json_source['brands']:
+        if brand['id'] == id:
+            for sub_nav in brand['sub-nav']:
+                display_name = sub_nav['display-name']
+                url = sub_nav['feed-url']
+                add_dir(display_name, url, 4, icon, FANART)
+            break
 
 
 def scrape_videos(url):
@@ -87,10 +79,6 @@ def build_video_link(item):
     if 'channel' in item:
         tv_title = item['channel']
 
-    requestor_id = ''
-    if 'requestorId' in item:
-        requestor_id = item['requestorId']
-
     # Highlight active streams
     start_time = item['start']
 
@@ -102,13 +90,23 @@ def build_video_link(item):
         length = int(item['length'])
 
     info = {
-        'plot':desc,
-        'tvshowtitle':tv_title,
-        'title':title,
-        'originaltitle':title,
-        'duration':length,
-        'aired':aired,
-        'genre':genre
+        'plot': desc,
+        'tvshowtitle': tv_title,
+        'title': title,
+        'originaltitle': title,
+        'duration': length,
+        'aired': aired,
+        'genre': genre
+    }
+
+    requestor_id = ''
+    channel = ''
+    if 'requestorId' in item: requestor_id = item['requestorId']
+    if 'channel' in item: channel = item['channel']
+
+    stream_info = {
+        'requestor_id': requestor_id,
+        'channel': channel
     }
 
     imgurl = "http://hdliveextra-pmd.edgesuite.net/HD/image_sports/mobile/"+item['image']+"_m50.jpg"
@@ -121,12 +119,11 @@ def build_video_link(item):
     if url != '':
         if free:
             menu_name = '[COLOR='+FREE+']'+menu_name + '[/COLOR]'
-            add_free_link(menu_name,url,imgurl,FANART,info)
+            add_free_link(menu_name,url,imgurl,FANART,info,stream_info)
         elif FREE_ONLY == 'false':
             menu_name = '[COLOR='+LIVE+']'+menu_name + '[/COLOR]'
-            add_premium_link(menu_name,url,imgurl,requestor_id,FANART,info)
+            add_premium_link(menu_name,url,imgurl,FANART,info,stream_info)
     else:
-        #elif my_time < event_start:
         if free:
             menu_name = '[COLOR='+FREE_UPCOMING+']'+menu_name + '[/COLOR]'
             add_dir(menu_name + ' ' + start_date, '/disabled', 0, imgurl, FANART, False, info)
@@ -135,13 +132,15 @@ def build_video_link(item):
             add_dir(menu_name + ' ' + start_date,'/disabled', 0, imgurl, FANART, False, info)
 
 
-def sign_stream(stream_url, stream_name, stream_icon, requestor_id):
-    #SERVICE_VARS['requestor_id'] = requestor_id
+def sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel):
+    SERVICE_VARS['requestor_id'] = requestor_id
+    resource_id = "<rss version='2.0'><channel><title>"+channel+"</title></channel></rss>"
+    SERVICE_VARS['resource_id'] = urllib.quote(resource_id)
     adobe = ADOBE(SERVICE_VARS)
-    if adobe.checkAuthN():
+    if adobe.check_authn():
         if adobe.authorize():
-            resource_id = get_resource_id()
-            media_token = adobe.mediaToken()
+            # resource_id = get_resource_id()
+            media_token = adobe.media_token()
             stream_url = tv_sign(media_token, resource_id, stream_url)
             stream_url = set_stream_quality(stream_url)
             listitem = xbmcgui.ListItem(path=stream_url)
@@ -149,12 +148,12 @@ def sign_stream(stream_url, stream_name, stream_icon, requestor_id):
         else:
             sys.exit()
     else:
-        msg = 'Your device is not currently authorized to view the selected content.\n Would you like to authorize this device now?'
+        msg = 'You must authenticate this device to view the selected content.\n Would you like to do that now?'
         dialog = xbmcgui.Dialog()
         answer = dialog.yesno("Authorize",msg)
         if answer:
-            adobe.registerDevice()
-            sign_stream(stream_url, stream_name, stream_icon, requestor_id)
+            adobe.register_device()
+            sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel)
         else:
             sys.exit()
 
@@ -168,11 +167,12 @@ def tv_sign(media_token, resource_id, stream_url):
         "User-Agent": UA_NBCSN
     }
 
-    payload = urllib.urlencode({'cdn': 'akamai',
-                             'mediaToken': media_token,
-                             'resource': base64.b64encode(resource_id),
-                             'url': stream_url
-                             })
+    payload = {
+        'cdn': 'akamai',
+        'mediaToken': media_token,
+        'resource': base64.b64encode(resource_id),
+        'url': stream_url
+     }
 
     r = requests.post(url, headers=headers, cookies=load_cookies(), data=payload, verify=VERIFY)
     save_cookies(r.cookies)
@@ -182,36 +182,38 @@ def tv_sign(media_token, resource_id, stream_url):
 
 def logout():
     adobe = ADOBE(SERVICE_VARS)
-    adobe.deauthorizeDevice()
+    adobe.logout()
 
 
-params=get_params()
+params = get_params()
 url = None
-name = None
+name = ''
 mode = None
 icon_image = None
-requestor_id = None
+requestor_id = ''
+channel = ''
 
 if 'url' in params: url = urllib.unquote_plus(params["url"])
 if 'name' in params: name = urllib.unquote_plus(params["name"])
 if 'mode' in params: mode = int(params["mode"])
 if 'icon_image' in params: icon_image = urllib.unquote_plus(params["icon_image"])
 if 'requestor_id' in params: requestor_id = urllib.unquote_plus(params['requestor_id'])
+if 'channel' in params: channel = urllib.unquote_plus(params['channel'])
 
 if mode is None or url is None or len(url) < 1:
     categories()
 
-elif mode == 3:
-    olympics(url)
+elif mode == 2:
+    get_sub_nav(url, icon_image)
 
 elif mode == 4:
         scrape_videos(url)
 
 elif mode == 5:
-        sign_stream(url, name, icon_image, requestor_id)
+        sign_stream(url, name, icon_image, requestor_id, channel)
 
 elif mode == 6:
-    #Set quality level based on user settings
+    # Set quality level based on user settings
     stream_url = set_stream_quality(url)
     listitem = xbmcgui.ListItem(path=stream_url)
     xbmcplugin.setResolvedUrl(ADDON_HANDLE, True, listitem)
@@ -219,8 +221,8 @@ elif mode == 6:
 elif mode == 999:
     logout()
 
-# Don't cache live and upcoming list
-if mode==1:
+# Don't cache content lists
+if mode == 4:
     xbmcplugin.endOfDirectory(ADDON_HANDLE, cacheToDisc=False)
 else:
     xbmcplugin.endOfDirectory(ADDON_HANDLE)

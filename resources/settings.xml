@@ -2,8 +2,8 @@
 <settings>
   <!-- General -->
   <category label="30200">
-    <setting id="deauthorize" type="action" label="30210" action="RunPlugin(plugin://plugin.video.nbcsnliveextra/?url=junk&amp;mode=999)" option="close" />
     <setting id="free_only" type="bool" label="30220" default="false" />
+    <setting id="deauthorize" type="action" label="30210" action="RunPlugin(plugin://plugin.video.nbcsnliveextra/?url=junk&amp;mode=999)" option="close" />
   </category>
   <!-- Visual -->
   <category label="30300">
