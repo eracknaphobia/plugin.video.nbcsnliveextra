@@ -16,13 +16,27 @@ def categories():
         icon = item['channelChangerLogo']
         add_dir(display_name, url, 2, icon, FANART)
 
+    r = requests.get(ROOT_URL + 'apps/NBCSportsGold/configuration-firetv.json', headers=headers, verify=VERIFY)
+    json_source = r.json()
+
+    for item in json_source['brands']:
+        display_name = item['display-name']
+        url = item['id']
+        icon = item['channelChangerLogo']
+        add_dir(display_name, url, 2, icon, FANART)
+
 
 def get_sub_nav(id, icon):
     headers = {
         'User-Agent': UA_NBCSN
     }
+    url = ROOT_URL
+    if id == 'nbc-sports-gold':
+        url += 'apps/NBCSportsGold/configuration-firetv.json'
+    else:
+        url += 'apps/NBCSports/configuration-firetv.json'
 
-    r = requests.get(ROOT_URL+'apps/NBCSports/configuration-firetv.json', headers=headers, verify=VERIFY)
+    r = requests.get(url, headers=headers, verify=VERIFY)
     json_source = r.json()
 
     for brand in json_source['brands']:
@@ -60,7 +74,6 @@ def scrape_videos(url):
 
 def build_video_link(item):
     url = ''
-
     if 'ottStreamUrl' in item:
         url = item['ottStreamUrl']
     elif 'iosStreamUrl' in item:
