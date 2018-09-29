@@ -1,3 +1,4 @@
+# noinspection PyInterpreter
 from resources.globals import *
 from adobepass.adobe import ADOBE
 
@@ -114,8 +115,10 @@ def build_video_link(item):
 
     requestor_id = ''
     channel = ''
-    if 'requestorId' in item: requestor_id = item['requestorId']
-    if 'channel' in item: channel = item['channel']
+    if 'requestorId' in item and item['requestorId'] != 'nbcentertainment':
+        requestor_id = item['requestorId']
+    if 'channel' in item:
+        channel = item['channel']
 
     stream_info = {
         'requestor_id': requestor_id,
@@ -126,7 +129,8 @@ def build_video_link(item):
     menu_name = filter(lambda x: x in string.printable, menu_name)
 
     start_date = stringToDate(start_time, "%Y%m%d-%H%M")
-    start_date = datetime.strftime(utc_to_local(start_date),xbmc.getRegion('dateshort')+' '+xbmc.getRegion('time').replace('%H%H','%H').replace(':%S',''))
+    start_date = datetime.strftime(utc_to_local(start_date),xbmc.getRegion('dateshort')
+                                   +' '+xbmc.getRegion('time').replace('%H%H','%H').replace(':%S',''))
     info['plot'] = 'Starting at: '+start_date+'\n\n' + info['plot']
 
     if url != '':

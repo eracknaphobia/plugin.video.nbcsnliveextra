@@ -276,7 +276,8 @@ def add_premium_link(name, link_url, iconimage, fanart=None, info=None, stream_i
 
 def add_dir(name, url, mode, iconimage, fanart=None, isFolder=True, info=None):
     ok = True
-    u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)+"&icon_image="+urllib.quote_plus(str(iconimage))
+    u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)\
+      +"&icon_image="+urllib.quote_plus(str(iconimage))
     liz=xbmcgui.ListItem(name, iconImage=ICON, thumbnailImage=iconimage)
     liz.setInfo(type="Video", infoLabels={"Title": name})
     if info is not None:
