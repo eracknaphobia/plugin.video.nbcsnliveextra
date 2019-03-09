@@ -1,4 +1,3 @@
-# noinspection PyInterpreter
 from resources.globals import *
 from adobepass.adobe import ADOBE
 
@@ -8,7 +7,8 @@ def categories():
         'User-Agent': UA_NBCSN
     }
 
-    r = requests.get(ROOT_URL+'apps/NBCSports/configuration-firetv.json', headers=headers, verify=VERIFY)
+    r = requests.get(ROOT_URL + 'apps/NBCSports/configuration-firetv.json?version=5.12.4', headers=headers,
+                     verify=VERIFY)
     json_source = r.json()
 
     for item in json_source['brands']:
@@ -17,14 +17,14 @@ def categories():
         icon = item['channelChangerLogo']
         add_dir(display_name, url, 2, icon, FANART)
 
-    r = requests.get(ROOT_URL + 'apps/NBCSportsGold/configuration-firetv.json', headers=headers, verify=VERIFY)
-    json_source = r.json()
-
-    for item in json_source['brands']:
-        display_name = item['display-name']
-        url = item['id']
-        icon = item['channelChangerLogo']
-        add_dir(display_name, url, 2, icon, FANART)
+    # r = requests.get(ROOT_URL + 'apps/NBCSportsGold/configuration-firetv.json', headers=headers, verify=VERIFY)
+    # json_source = r.json()
+    #
+    # for item in json_source['brands']:
+    #     display_name = item['display-name']
+    #     url = item['id']
+    #     icon = item['channelChangerLogo']
+    #     add_dir(display_name, url, 2, icon, FANART)
 
 
 def get_sub_nav(id, icon):
@@ -32,10 +32,11 @@ def get_sub_nav(id, icon):
         'User-Agent': UA_NBCSN
     }
     url = ROOT_URL
-    if id == 'nbc-sports-gold':
-        url += 'apps/NBCSportsGold/configuration-firetv.json'
-    else:
-        url += 'apps/NBCSports/configuration-firetv.json'
+    url += 'apps/NBCSports/configuration-firetv.json?version=5.12.4'
+    # if id == 'nbc-sports-gold':
+    #     url += 'apps/NBCSportsGold/configuration-firetv.json'
+    # else:
+    #     url += 'apps/NBCSports/configuration-firetv.json'
 
     r = requests.get(url, headers=headers, verify=VERIFY)
     json_source = r.json()
@@ -96,7 +97,7 @@ def build_video_link(item):
     # Highlight active streams
     start_time = item['start']
 
-    aired = start_time[0:4]+'-'+start_time[4:6]+'-'+start_time[6:8]
+    aired = start_time[0:4] + '-' + start_time[4:6] + '-' + start_time[6:8]
     genre = item['sportName']
 
     length = 0
@@ -125,33 +126,35 @@ def build_video_link(item):
         'channel': channel
     }
 
-    imgurl = "http://hdliveextra-pmd.edgesuite.net/HD/image_sports/mobile/"+item['image']+"_m50.jpg"
+    imgurl = "http://hdliveextra-pmd.edgesuite.net/HD/image_sports/mobile/" + item['image'] + "_m50.jpg"
     menu_name = filter(lambda x: x in string.printable, menu_name)
 
     start_date = stringToDate(start_time, "%Y%m%d-%H%M")
-    start_date = datetime.strftime(utc_to_local(start_date),xbmc.getRegion('dateshort')
-                                   +' '+xbmc.getRegion('time').replace('%H%H','%H').replace(':%S',''))
-    info['plot'] = 'Starting at: '+start_date+'\n\n' + info['plot']
+    start_date = datetime.strftime(utc_to_local(start_date), xbmc.getRegion('dateshort')
+                                   + ' ' + xbmc.getRegion('time').replace('%H%H', '%H').replace(':%S', ''))
+    info['plot'] = 'Starting at: ' + start_date + '\n\n' + info['plot']
 
     if url != '':
         if free:
-            menu_name = '[COLOR='+FREE+']'+menu_name + '[/COLOR]'
-            add_free_link(menu_name,url,imgurl,FANART,info,stream_info)
+            menu_name = '[COLOR=' + FREE + ']' + menu_name + '[/COLOR]'
+            add_free_link(menu_name, url, imgurl, FANART, info)
+            #add_free_link(name, link_url, iconimage, fanart=None, info=None)
         elif FREE_ONLY == 'false':
-            menu_name = '[COLOR='+LIVE+']'+menu_name + '[/COLOR]'
-            add_premium_link(menu_name,url,imgurl,FANART,info,stream_info)
+            menu_name = '[COLOR=' + LIVE + ']' + menu_name + '[/COLOR]'
+            add_premium_link(menu_name, url, imgurl, stream_info, FANART, info)
+            #(name, link_url, iconimage, requestor_id, fanart=None, info=None)
     else:
         if free:
-            menu_name = '[COLOR='+FREE_UPCOMING+']'+menu_name + '[/COLOR]'
+            menu_name = '[COLOR=' + FREE_UPCOMING + ']' + menu_name + '[/COLOR]'
             add_dir(menu_name + ' ' + start_date, '/disabled', 0, imgurl, FANART, False, info)
         elif FREE_ONLY == 'false':
-            menu_name = '[COLOR='+UPCOMING+']'+menu_name + '[/COLOR]'
-            add_dir(menu_name + ' ' + start_date,'/disabled', 0, imgurl, FANART, False, info)
+            menu_name = '[COLOR=' + UPCOMING + ']' + menu_name + '[/COLOR]'
+            add_dir(menu_name + ' ' + start_date, '/disabled', 0, imgurl, FANART, False, info)
 
 
 def sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel):
     SERVICE_VARS['requestor_id'] = requestor_id
-    resource_id = "<rss version='2.0'><channel><title>"+channel+"</title></channel></rss>"
+    resource_id = "<rss version='2.0'><channel><title>" + channel + "</title></channel></rss>"
     SERVICE_VARS['resource_id'] = urllib.quote(resource_id)
     adobe = ADOBE(SERVICE_VARS)
     if adobe.check_authn():
@@ -167,7 +170,7 @@ def sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel):
     else:
         msg = 'You must authenticate this device to view the selected content.\n Would you like to do that now?'
         dialog = xbmcgui.Dialog()
-        answer = dialog.yesno("Authorize",msg)
+        answer = dialog.yesno("Authorize", msg)
         if answer:
             adobe.register_device()
             sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel)
@@ -189,7 +192,7 @@ def tv_sign(media_token, resource_id, stream_url):
         'mediaToken': media_token,
         'resource': base64.b64encode(resource_id),
         'url': stream_url
-     }
+    }
 
     r = requests.post(url, headers=headers, cookies=load_cookies(), data=payload, verify=VERIFY)
     save_cookies(r.cookies)
@@ -224,10 +227,10 @@ elif mode == 2:
     get_sub_nav(url, icon_image)
 
 elif mode == 4:
-        scrape_videos(url)
+    scrape_videos(url)
 
 elif mode == 5:
-        sign_stream(url, name, icon_image, requestor_id, channel)
+    sign_stream(url, name, icon_image, requestor_id, channel)
 
 elif mode == 6:
     # Set quality level based on user settings
