@@ -162,9 +162,9 @@ def sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel):
             # resource_id = get_resource_id()
             media_token = adobe.media_token()
             stream_url = tv_sign(media_token, resource_id, stream_url)
-            stream_url = set_stream_quality(stream_url)
-            listitem = xbmcgui.ListItem(path=stream_url)
-            xbmcplugin.setResolvedUrl(ADDON_HANDLE, True, listitem)
+            #stream_url = set_stream_quality(stream_url)
+            stream_url += "|User-Agent=" + UA_NBCSN
+            play_stream(stream_url)
         else:
             sys.exit()
     else:
@@ -205,6 +205,25 @@ def logout():
     adobe.logout()
 
 
+def play_stream(stream_url):
+    xbmc.log('------------------------------------------------------------------------------------------')
+    xbmc.log(stream_url)
+    xbmc.log('------------------------------------------------------------------------------------------')
+    if xbmc.getCondVisibility('System.HasAddon(inputstream.adaptive)'):
+        listitem = xbmcgui.ListItem(path=stream_url.split("|")[0])
+        listitem.setProperty('inputstreamaddon', 'inputstream.adaptive')
+        listitem.setProperty('inputstream.adaptive.manifest_type', 'hls')
+        listitem.setProperty('inputstream.adaptive.stream_headers', stream_url.split("|")[1])
+        listitem.setProperty('inputstream.adaptive.license_key', "|" + stream_url.split("|")[1])
+    else:
+        listitem = xbmcgui.ListItem(path=stream_url)
+        listitem.setMimeType("application/x-mpegURL")
+
+    # listitem = xbmcgui.ListItem(path=stream_url)
+    xbmcplugin.setResolvedUrl(ADDON_HANDLE, True, listitem)
+
+
+
 params = get_params()
 url = None
 name = ''
@@ -234,9 +253,10 @@ elif mode == 5:
 
 elif mode == 6:
     # Set quality level based on user settings
-    stream_url = set_stream_quality(url)
-    listitem = xbmcgui.ListItem(path=stream_url)
-    xbmcplugin.setResolvedUrl(ADDON_HANDLE, True, listitem)
+    #stream_url = set_stream_quality(url)
+    #listitem = xbmcgui.ListItem(path=stream_url)
+    stream_url = url + "|User-Agent=" + UA_NBCSN
+    play_stream(stream_url)
 
 elif mode == 999:
     logout()
