@@ -114,12 +114,12 @@ def build_video_link(item):
         'genre': genre
     }
 
-    requestor_id = ''
+    requestor_id = 'nbcsports'
     channel = ''
-    if 'requestorId' in item and item['requestorId'] != 'nbcentertainment':
-        requestor_id = item['requestorId']
-    if 'channel' in item:
-        channel = item['channel']
+    # if 'requestorId' in item and item['requestorId'] != 'nbcentertainment':
+    #     requestor_id = item['requestorId']
+    # if 'channel' in item:
+    #     channel = item['channel']
 
     stream_info = {
         'requestor_id': requestor_id,
@@ -133,8 +133,10 @@ def build_video_link(item):
     start_date = datetime.strftime(utc_to_local(start_date), xbmc.getRegion('dateshort')
                                    + ' ' + xbmc.getRegion('time').replace('%H%H', '%H').replace(':%S', ''))
     info['plot'] = 'Starting at: ' + start_date + '\n\n' + info['plot']
-
-    if url != '':
+    status = 3
+    if 'status' in item:
+        status = item['status']
+    if url != '' and status != 1:
         if free:
             menu_name = '[COLOR=' + FREE + ']' + menu_name + '[/COLOR]'
             add_free_link(menu_name, url, imgurl, FANART, info)
@@ -154,12 +156,14 @@ def build_video_link(item):
 
 def sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel):
     SERVICE_VARS['requestor_id'] = requestor_id
-    resource_id = "<rss version='2.0'><channel><title>" + channel + "</title></channel></rss>"
+    # SERVICE_VARS['requestor_id'] = 'nbcsports'
+    resource_id = get_resource_id()
+    # resource_id = "<rss version='2.0'><channel><title>" + channel + "</title></channel></rss>"
     SERVICE_VARS['resource_id'] = urllib.quote(resource_id)
     adobe = ADOBE(SERVICE_VARS)
     if adobe.check_authn():
         if adobe.authorize():
-            # resource_id = get_resource_id()
+            #resource_id = get_resource_id()
             media_token = adobe.media_token()
             stream_url = tv_sign(media_token, resource_id, stream_url)
             #stream_url = set_stream_quality(stream_url)

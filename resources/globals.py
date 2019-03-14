@@ -70,7 +70,7 @@ for fid in filter_ids:
         filter_list.append(fid)
 
 # User Agents
-UA_NBCSN = 'NBCSports-iOS/12153 CFNetwork/894 Darwin/17.4.0'
+UA_NBCSN = 'Adobe Primetime/1.4 Dalvik/2.1.0 (Linux; U; Android 6.0.1; Hub Build/MHC19J)'
 
 # Event Colors
 FREE = 'FF43CD80'
@@ -119,8 +119,8 @@ def get_resource_id():
     # resource_id = response.read()
     # response.close()
     # resource_id = resource_id.replace('\n', ' ').replace('\r', '')
-    # resource_id = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>nbcsports</title><item><title>NBC Sports PGA Event</title><guid>123456789</guid><media:rating scheme="urn:vchip">TV-PG</media:rating></item></channel></rss>'
-    # resource_id = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>golf</title><item><title>RSM%20Classic%20-%20Rd%201</title><guid>nbcs_100188</guid><media:rating scheme="urn:v-chip"></media:rating></item></channel></rss>'
+    #resource_id = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>nbcsports</title><item><title>NBC Sports PGA Event</title><guid>123456789</guid><media:rating scheme="urn:vchip">TV-PG</media:rating></item></channel></rss>'
+    #resource_id = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>golf</title><item><title>RSM%20Classic%20-%20Rd%201</title><guid>nbcs_100188</guid><media:rating scheme="urn:v-chip"></media:rating></item></channel></rss>'
     resource_id = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>NBCOlympics</title><item><title>NBC Sports PGA Event</title><guid>123456789</guid><media:rating scheme="urn:vchip">TV-PG</media:rating></item></channel></rss>'
 
     return resource_id
@@ -222,6 +222,9 @@ def natural_sort_key(s):
 def utc_to_local(utc_dt):
     # get integer timestamp to avoid precision lost
     timestamp = calendar.timegm(utc_dt.timetuple())
+    xbmc.log(str(timestamp))
+    if timestamp < 1:
+        timestamp = 1
     local_dt = datetime.fromtimestamp(timestamp)
     assert utc_dt.resolution >= timedelta(microseconds=1)
     return local_dt.replace(microsecond=utc_dt.microsecond)
