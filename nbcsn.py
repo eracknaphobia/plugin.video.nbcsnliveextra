@@ -126,8 +126,8 @@ def build_video_link(item):
         'channel': channel
     }
 
-    imgurl = "http://hdliveextra-pmd.edgesuite.net/HD/image_sports/mobile/" + item['image'] + "_m50.jpg"
-    menu_name = filter(lambda x: x in string.printable, menu_name)
+    imgurl = "http://hdliveextra-pmd.edgesuite.net/HD/image_sports/mobile/%s_m50.jpg" % item['image']
+    # menu_name = filter(lambda x: x in string.printable, menu_name)
 
     start_date = stringToDate(start_time, "%Y%m%d-%H%M")
     start_date = datetime.strftime(utc_to_local(start_date), xbmc.getRegion('dateshort')
@@ -172,9 +172,8 @@ def sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel):
         else:
             sys.exit()
     else:
-        msg = 'You must authenticate this device to view the selected content.\n Would you like to do that now?'
         dialog = xbmcgui.Dialog()
-        answer = dialog.yesno("Authorize", msg)
+        answer = dialog.yesno(LOCAL_STRING(30010), LOCAL_STRING(30011))
         if answer:
             adobe.register_device()
             sign_stream(stream_url, stream_name, stream_icon, requestor_id, channel)
@@ -194,7 +193,7 @@ def tv_sign(media_token, resource_id, stream_url):
     payload = {
         'cdn': 'akamai',
         'mediaToken': media_token,
-        'resource': base64.b64encode(resource_id),
+        'resource': base64.b64encode(codecs.encode(resource_id)),
         'url': stream_url
     }
 
@@ -213,12 +212,18 @@ def play_stream(stream_url):
     xbmc.log('------------------------------------------------------------------------------------------')
     xbmc.log(stream_url)
     xbmc.log('------------------------------------------------------------------------------------------')
+
     if xbmc.getCondVisibility('System.HasAddon(inputstream.adaptive)'):
-        listitem = xbmcgui.ListItem(path=stream_url.split("|")[0])
-        listitem.setProperty('inputstreamaddon', 'inputstream.adaptive')
+        stream = stream_url.split("|")[0]
+        headers = stream_url.split("|")[1]
+        listitem = xbmcgui.ListItem(path=stream)
+        if KODI_VERSION >= 19:
+            listitem.setProperty('inputstream', 'inputstream.adaptive')
+        else:
+            listitem.setProperty('inputstreamaddon', 'inputstream.adaptive')
         listitem.setProperty('inputstream.adaptive.manifest_type', 'hls')
-        listitem.setProperty('inputstream.adaptive.stream_headers', stream_url.split("|")[1])
-        listitem.setProperty('inputstream.adaptive.license_key', "|" + stream_url.split("|")[1])
+        listitem.setProperty('inputstream.adaptive.stream_headers', headers)
+        listitem.setProperty('inputstream.adaptive.license_key', "|" + headers)
     else:
         listitem = xbmcgui.ListItem(path=stream_url)
         listitem.setMimeType("application/x-mpegURL")

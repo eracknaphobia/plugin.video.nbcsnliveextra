@@ -1,39 +1,47 @@
-import re
-import os
-import sys
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-import uuid
-import string, random
-import urllib, urllib2, requests
-import HTMLParser
+import os, re, sys
+import string
+import urllib, requests
 import time
-import cookielib
 import base64
-from StringIO import StringIO
-from datetime import datetime, timedelta
 import calendar
+import codecs
+from datetime import datetime, timedelta
+from kodi_six import xbmc, xbmcplugin, xbmcgui, xbmcaddon, xbmcvfs
+
+if sys.version_info[0] > 2:
+    import http
+    cookielib = http.cookiejar
+    urllib = urllib.parse
+else:
+    import cookielib
+
 
 # KODI ADDON GLOBALS
 ADDON_HANDLE = int(sys.argv[1])
-ADDON_PATH_PROFILE = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+if sys.version_info[0] > 2:
+    ADDON_PATH_PROFILE = xbmcvfs.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+else:
+    ADDON_PATH_PROFILE = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
 LOCAL_STRING = xbmcaddon.Addon().getLocalizedString
 ROOTDIR = xbmcaddon.Addon().getAddonInfo('path')
-FANART = ROOTDIR + "/fanart.jpg"
-ICON = ROOTDIR + "/icon.png"
+ICON = os.path.join(ROOTDIR,"icon.png")
+FANART = os.path.join(ROOTDIR,"fanart.jpg")
 ROOT_URL = 'http://stream.nbcsports.com/data/mobile/'
-# Settings file location
-settings = xbmcaddon.Addon()
+
 
 # Main settings
-# QUALITY = str(settings.getSetting(id="quality"))
-CDN = int(settings.getSetting(id="cdn"))
-USERNAME = str(settings.getSetting(id="username"))
-PASSWORD = str(settings.getSetting(id="password"))
-PROVIDER = str(settings.getSetting(id="provider"))
-# CLEAR = str(settings.getSetting(id="clear_data"))
-FREE_ONLY = str(settings.getSetting(id="free_only"))
-# PLAY_MAIN = str(settings.getSetting(id="play_main"))
-PLAY_BEST = str(settings.getSetting(id="play_best"))
+settings = xbmcaddon.Addon()
+FREE_ONLY = str(settings.getSetting("free_only"))
+KODI_VERSION = float(re.findall(r'\d{2}\.\d{1}', xbmc.getInfoLabel("System.BuildVersion"))[0])
+# if sys.version_info[0] > 2:
+#     FREE_ONLY = settings.getSettingString("free_only")
+# else:
+#     # CDN = int(settings.getSetting(id="cdn"))
+#     # USERNAME = str(settings.getSetting(id="username"))
+#     # PASSWORD = str(settings.getSetting(id="password"))
+#     # PROVIDER = str(settings.getSetting(id="provider"))
+#     FREE_ONLY = str(settings.getSetting("free_only"))
+#     # PLAY_BEST = str(settings.getSetting(id="play_best"))
 
 filter_ids = [
     "show-all",
@@ -126,99 +134,6 @@ def get_resource_id():
     return resource_id
 
 
-def set_stream_quality(url):
-    stream_url = {}
-    stream_title = []
-
-    # Open master file a get cookie(s)
-    headers = {
-        "Accept": "*/*",
-        "Accept-Encoding": "deflate",
-        "Accept-Language": "en-us",
-        "User-Agent": UA_NBCSN
-    }
-
-    r = requests.get(url, headers=headers, cookies=load_cookies(), verify=VERIFY)
-    master = r.text
-
-    xbmc.log(str(master))
-
-    cookies = ''
-    for cookie in r.cookies:
-        if cookies != '':
-            cookies = cookies + "; "
-        cookies = cookies + cookie.name + "=" + cookie.value
-
-    xbmc.log(cookies)
-
-    line = re.compile("(.+?)\n").findall(master)
-    for temp_url in line:
-        if '#EXT' not in temp_url:
-            temp_url = temp_url.rstrip()
-            start = 0
-            if 'http' not in temp_url:
-                if 'master' in url:
-                    start = url.find('master')
-                elif 'manifest' in url:
-                    start = url.find('manifest')
-
-            if url.find('?') != -1:
-                replace_url_chunk = url[start:url.find('?')]
-            else:
-                replace_url_chunk = url[start:]
-
-            temp_url = url.replace(replace_url_chunk, temp_url)
-            temp_url = temp_url.rstrip() + "|User-Agent=" + UA_NBCSN
-
-            # if '_alid_=' in cookies:
-            temp_url = temp_url + "&Cookie=" + cookies
-
-            if desc not in stream_title:
-                stream_title.append(desc)
-                stream_url.update({desc: temp_url})
-        else:
-            desc = ''
-            start = temp_url.find('BANDWIDTH=')
-            if start > 0:
-                start = start + len('BANDWIDTH=')
-                end = temp_url.find(',', start)
-                if end != -1:
-                    desc = temp_url[start:end]
-                else:
-                    desc = temp_url[start:]
-                try:
-                    int(desc)
-                    desc = str(int(desc) / 1000) + ' kbps'
-                except:
-                    pass
-
-    if len(stream_title) > 0:
-        ret = -1
-        stream_title.sort(key=natural_sort_key, reverse=True)
-        if str(PLAY_BEST) == 'true':
-            ret = 0
-        else:
-            dialog = xbmcgui.Dialog()
-            ret = dialog.select('Choose Stream Quality', stream_title)
-
-        if ret >= 0:
-            url = stream_url.get(stream_title[ret])
-        else:
-            sys.exit()
-    else:
-        msg = "No playable streams found."
-        dialog = xbmcgui.Dialog()
-        ok = dialog.ok('Streams Not Found', msg)
-
-    return url
-
-
-def natural_sort_key(s):
-    _nsre = re.compile('([0-9]+)')
-    return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, s)]
-
-
 def utc_to_local(utc_dt):
     # get integer timestamp to avoid precision lost
     timestamp = calendar.timegm(utc_dt.timetuple())
@@ -257,12 +172,13 @@ def load_cookies():
     return cj
 
 
-def add_link(name, url, title, iconimage, fanart, info=None):
+def add_link(name, url, title, icon=None, fanart=None, info=None):
     ok = True
-    liz = xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage, )
-
-    liz.setProperty('fanart_image', fanart)
+    liz = xbmcgui.ListItem(name)
+    if icon is None: icon = ICON
+    if fanart is None: fanart = FANART
     liz.setProperty("IsPlayable", "true")
+    liz.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
     liz.setInfo(type="Video", infoLabels={"Title": title})
     if info is not None:
         liz.setInfo(type="Video", infoLabels=info)
@@ -271,49 +187,53 @@ def add_link(name, url, title, iconimage, fanart, info=None):
     return ok
 
 
-def add_free_link(name, link_url, iconimage, fanart=None, info=None):
+def add_free_link(name, link_url, icon=None, fanart=None, info=None):
     ok = True
-    u = sys.argv[0] + "?url=" + urllib.quote_plus(link_url) + "&mode=6&icon_image=" + urllib.quote_plus(iconimage)
-    liz = xbmcgui.ListItem(name, iconImage=ICON, thumbnailImage=iconimage)
+    u = sys.argv[0] + "?url=" + urllib.quote_plus(link_url) + "&mode=6&icon_image=" + urllib.quote_plus(icon)
+    liz = xbmcgui.ListItem(name)
+    if icon is None: icon = ICON
+    if fanart is None: fanart = FANART
     liz.setProperty("IsPlayable", "true")
+    liz.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
     liz.setInfo(type="Video", infoLabels={"Title": name})
     if info is not None:
         liz.setInfo(type="Video", infoLabels=info)
-
-    liz.setProperty('fanart_image', fanart)
     ok = xbmcplugin.addDirectoryItem(handle=ADDON_HANDLE, url=u, listitem=liz)
     xbmcplugin.setContent(ADDON_HANDLE, 'episodes')
     return ok
 
 
-def add_premium_link(name, link_url, iconimage, stream_info, fanart=None, info=None):
+def add_premium_link(name, link_url, icon, stream_info, fanart=None, info=None):
     ok = True
     u = sys.argv[0] + "?url=" + urllib.quote_plus(link_url) + "&mode=5&icon_image=" + urllib.quote_plus(
-        iconimage) + "&requestor_id=" + urllib.quote_plus(stream_info['requestor_id']) + "&channel=" \
+        icon) + "&requestor_id=" + urllib.quote_plus(stream_info['requestor_id']) + "&channel=" \
         + urllib.quote_plus(stream_info['channel'])
 
-    liz = xbmcgui.ListItem(name, iconImage=ICON, thumbnailImage=iconimage)
+    liz = xbmcgui.ListItem(name)
+    if icon is None: icon = ICON
+    if fanart is None: fanart = FANART
     liz.setProperty("IsPlayable", "true")
+    liz.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
     liz.setInfo(type="Video", infoLabels={"Title": name})
     if info is not None:
         liz.setInfo(type="Video", infoLabels=info)
 
-    # liz.setProperty('fanart_image', fanart)
     ok = xbmcplugin.addDirectoryItem(handle=ADDON_HANDLE, url=u, listitem=liz)
     xbmcplugin.setContent(ADDON_HANDLE, 'episodes')
     return ok
 
 
-def add_dir(name, url, mode, iconimage, fanart=None, isFolder=True, info=None):
+def add_dir(name, url, mode, icon, fanart=None, isFolder=True, info=None):
     ok = True
     u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&mode=" + str(mode) + "&name=" + urllib.quote_plus(name) \
-        + "&icon_image=" + urllib.quote_plus(str(iconimage))
-    liz = xbmcgui.ListItem(name, iconImage=ICON, thumbnailImage=iconimage)
-    liz.setInfo(type="Video", infoLabels={"Title": name})
+        + "&icon_image=" + urllib.quote_plus(str(icon))
+    liz = xbmcgui.ListItem(name)
+    if icon is None: icon = ICON
+    if fanart is None: fanart = FANART
+    liz.setArt({'icon': icon, 'thumb': icon, 'fanart': fanart})
     if info is not None:
         liz.setInfo(type="Video", infoLabels=info)
 
-    liz.setProperty('fanart_image', fanart)
     ok = xbmcplugin.addDirectoryItem(handle=ADDON_HANDLE, url=u, listitem=liz, isFolder=isFolder)
     xbmcplugin.setContent(ADDON_HANDLE, 'episodes')
     return ok
