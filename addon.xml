@@ -15,6 +15,9 @@
     <platform>all</platform>
     <summary lang="en_GB">Watch NBCSN Live Extra</summary>
     <description lang="en_GB">NBC Sports Live Extra is a service that allows you to watch NBC Sports coverage of live events from NBC and NBCSports Network</description>
+    <news>
+        - Updates for python 3 compatibility
+    </news>
     <language>en</language>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
