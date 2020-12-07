@@ -2,7 +2,6 @@
 <addon id="plugin.video.nbcsnliveextra" name="NBC Sports Live Extra" version="2020.11.6" provider-name="eracknaphobia">
   <requires>
     <import addon="xbmc.python" version="2.19.0"/>
-    <import addon="script.module.simplejson" />
     <import addon="script.module.adobepass" />
     <import addon="script.module.requests" />
     <import addon="script.module.kodi-six" />
