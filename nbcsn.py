@@ -229,7 +229,7 @@ elif mode == 999:
     logout()
 
 # Don't cache content lists
-if mode == 4:
-    xbmcplugin.endOfDirectory(ADDON_HANDLE, cacheToDisc=False)
-else:
+if mode and mode > 4:
     xbmcplugin.endOfDirectory(ADDON_HANDLE)
+else:
+    xbmcplugin.endOfDirectory(ADDON_HANDLE, cacheToDisc=False)
